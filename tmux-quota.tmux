@@ -1,50 +1,34 @@
 #!/usr/bin/env bash
 
-disk=/dev/nvme1n1p1
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-get_tmux_option() {
-    local option=$1
-    local default_value=$2
-    local option_value="$(tmux show-option -gqv "$option")"
+source "$CURRENT_DIR/scripts/helpers.sh"
 
-    if [[ -z "$option_value" ]]; then
-        echo "$default_value"
-    else
-        echo "$option_value"
-    fi
-}
-
-
-quota_interpolations=(
+quota_placeholders=(
     "\#{quota_space_used}"
     "\#{quota_space_limit}"
 )
-quota_interpolation_cmd=(
-    "quota -s | grep '/dev/nvme1n1p1' | awk '{print \$2}'"
-    "quota -s | grep '/dev/nvme1n1p1' | awk '{print \$3}'"
+quota_commands=(
+    "#($CURRENT_DIR/scripts/quota_space_used.sh)"
+    "#($CURRENT_DIR/scripts/quota_space_limit.sh)"
 )
 
-set_tmux_option() {
-    local option=$1
-    local value=$2
-    tmux set-option -gq "$option" "$value"
-}
-
-do_interpolation() {
-    local result="$1"
-    for ((i=0; i < ${#quota_interpolations[@]}; i++)); do
-        local cmd="${quota_interpolation_cmd[$i]}"
-        cmd="#(${cmd})"
-	    result="${result//${quota_interpolations[$i]}/${cmd}}"
-    done
-    echo "$result"
+replace_placeholder() {
+  local value="$1"
+  for ((i=0; i<${#quota_commands[@]}; i++)); do
+    value=${value//${quota_placeholders[$i]}/${quota_commands[$i]}}
+  done
+  echo "$value"
 }
 
 update_tmux_option() {
-	local option=$1
-	local option_value=$(get_tmux_option "$option")
-	local new_option_value=$(do_interpolation "$option_value")
-	set_tmux_option "$option" "$new_option_value"
+  local option=$1
+  local old_option_value=$(get_tmux_option "$option")
+  local new_option_value=$(replace_placeholder "$old_option_value")
+
+  echo "old: $old_option_value"
+  echo "new: $new_option_value"
+  $(set_tmux_option $option "$new_option_value")
 }
 
 main() {
