@@ -5,12 +5,16 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$CURRENT_DIR/scripts/helpers.sh"
 
 quota_placeholders=(
-    "\#{quota_space_used}"
-    "\#{quota_space_limit}"
+    "\#{quota_used}"
+    "\#{quota_limit}"
+    "\#{quota_percentage}"
+    "\#{quota_fg_color}"
 )
 quota_commands=(
-    "#($CURRENT_DIR/scripts/quota_space_used.sh)"
-    "#($CURRENT_DIR/scripts/quota_space_limit.sh)"
+    "#($CURRENT_DIR/scripts/quota_used.sh)"
+    "#($CURRENT_DIR/scripts/quota_limit.sh)"
+    "#($CURRENT_DIR/scripts/quota_percentage.sh)"
+    "#($CURRENT_DIR/scripts/quota_fg_color.sh)"
 )
 
 replace_placeholder() {
