@@ -18,7 +18,21 @@ set_tmux_option() {
     local value=$2
     tmux set-option -gq "$option" "$value"
 }
+# convert_units <KB> <decimal> 
+convert_units() {
+    input="$1"
+    decimal="$2"
+    number=$(echo "$input" | sed 's/[^0-9]*//g')
 
-get_mount_point() {
-  echo -n "$(get_tmux_option "@quota_mount_point" "/dev/nvme1n1p1")"
+    if [ "$number" -lt 1024 ]; then
+        unit="$number""KB"
+    elif [ "$number" -lt 1048576 ]; then
+        mb=$(echo "scale=$decimal; $number / 1024" | bc)
+        unit="$mb""MB"
+    else
+        gb=$(echo "scale=$decimal; $number / 1048576" | bc)
+        unit="$gb""GB"
+    fi
+
+    echo "$unit"
 }
